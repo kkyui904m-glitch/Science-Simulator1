@@ -1,0 +1,1931 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="생명과학 × 컴퓨터공학 × 기계공학 바이오테크 융합 통합 실험실 시뮬레이터 (CRISPR-Cas9, DeepSpCas9, AlphaFold, 마이크로 의료 로봇, 미세유체 칩, PID 제어)">
+<meta name="keywords" content="바이오테크 시대, 생명과학, 유전공학, CRISPR-Cas9, DeepSpCas9, AlphaFold, 마이크로로봇, 미세유체칩, PID제어, 시뮬레이터">
+<meta name="robots" content="index, follow">
+<meta property="og:title" content="바이오테크 융합 통합 실험실 (6대 심화 실험 시뮬레이터)">
+<meta property="og:description" content="유전자가위 탐색, 돌연변이 해밍 거리, AlphaFold 단백질 변이, 마이크로 로봇 유체역학 및 PID 조향 인터랙티브 실험 웹앱">
+<meta property="og:type" content="website">
+<title>바이오테크 융합 통합 실험실 (6대 심화 실험 시뮬레이터)</title>
+<style>
+  :root {
+    --bg: #0b1120;
+    --panel: #1e293b;
+    --panel-border: #334155;
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --primary: #3b82f6;
+    --emerald: #10b981;
+    --amber: #f59e0b;
+    --rose: #ef4444;
+    --purple: #a855f7;
+    --cyan: #06b6d4;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding-bottom: 60px;
+  }
+  header {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-bottom: 1px solid var(--panel-border);
+    padding: 16px 26px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .title-area h1 {
+    font-size: 19.5px;
+    font-weight: 800;
+    background: linear-gradient(90deg, #60a5fa, #34d399, #c084fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .title-area p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .badge-group { display: flex; gap: 7px; flex-wrap: wrap; }
+  .badge {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-weight: 600;
+    background: rgba(59, 130, 246, 0.15);
+    color: #93c5fd;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+  }
+  .container { max-width: 1340px; margin: 0 auto; padding: 18px 22px; }
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
+    gap: 9px;
+    margin-bottom: 20px;
+  }
+  .tab-btn {
+    background: var(--panel);
+    color: var(--muted);
+    border: 1px solid var(--panel-border);
+    padding: 11px 13px;
+    border-radius: 12px;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .tab-btn:hover { border-color: var(--primary); color: var(--text); }
+  .tab-btn.active {
+    background: linear-gradient(135deg, rgba(59,130,246,0.24), rgba(16,185,129,0.16));
+    border-color: var(--primary);
+    color: #fff;
+    box-shadow: 0 4px 18px rgba(59, 130, 246, 0.22);
+  }
+  .tab-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
+    background: rgba(255,255,255,0.08);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11.5px;
+    flex-shrink: 0;
+  }
+  .tab-btn.active .tab-num { background: var(--primary); color: #fff; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .kpi-card {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    padding: 14px 18px;
+  }
+  .kpi-label { font-size: 11.5px; color: var(--muted); font-weight: 600; }
+  .kpi-val { font-size: 24px; font-weight: 800; margin-top: 4px; }
+  .kpi-sub { font-size: 11.5px; margin-top: 3px; color: var(--muted); }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1.35fr;
+    gap: 18px;
+  }
+  .grid-equal {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  @media (max-width: 960px) {
+    .grid-2, .grid-equal { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 18px;
+  }
+  .card h2 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .control-group { margin-bottom: 14px; }
+  .control-group label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12.5px;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #cbd5e1;
+  }
+  input[type="range"] { width: 100%; accent-color: var(--primary); cursor: pointer; }
+  textarea, select {
+    width: 100%;
+    background: #0f172a;
+    border: 1px solid var(--panel-border);
+    color: #e2e8f0;
+    border-radius: 8px;
+    padding: 9px 11px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 12.5px;
+  }
+  .preset-btns { display: flex; gap: 7px; margin-bottom: 10px; flex-wrap: wrap; }
+  .btn {
+    background: #334155;
+    color: #f8fafc;
+    border: 1px solid #475569;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.15s;
+  }
+  .btn:hover { background: var(--primary); border-color: var(--primary); }
+  .btn.active-preset { background: var(--primary); border-color: var(--primary); }
+
+  .table-wrap {
+    max-height: 320px;
+    overflow-y: auto;
+    border: 1px solid var(--panel-border);
+    border-radius: 10px;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { padding: 8px 9px; text-align: left; border-bottom: 1px solid #334155; }
+  th { background: #0f172a; color: var(--muted); position: sticky; top: 0; font-weight: 700; }
+  tr.row-opt { background: rgba(16, 185, 129, 0.08); cursor: pointer; }
+  tr.row-opt:hover, tr:hover { background: rgba(59, 130, 246, 0.18); cursor: pointer; }
+  .mono { font-family: 'Consolas', 'Courier New', monospace; letter-spacing: 0.4px; }
+  .pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .pill-ok { background: rgba(16,185,129,0.2); color: #34d399; }
+  .pill-high { background: rgba(239,68,68,0.2); color: #fca5a5; }
+  .pill-low { background: rgba(245,158,11,0.2); color: #fcd34d; }
+
+  canvas {
+    width: 100%;
+    background: #090e1a;
+    border-radius: 10px;
+    border: 1px solid #1e293b;
+    display: block;
+  }
+  .dna-box {
+    background: #090e1a;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-top: 10px;
+    font-family: 'Consolas', monospace;
+    font-size: 13.5px;
+    overflow-x: auto;
+  }
+  .mismatch-char {
+    background: #ef4444;
+    color: #fff;
+    font-weight: 800;
+    padding: 1px 4px;
+    border-radius: 4px;
+  }
+  .match-char { color: #34d399; }
+  .formula-box {
+    background: rgba(59,130,246,0.08);
+    border-left: 3px solid var(--primary);
+    padding: 10px 13px;
+    font-size: 12px;
+    color: #cbd5e1;
+    border-radius: 0 8px 8px 0;
+    margin-top: 10px;
+  }
+  .codon-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .codon-chip {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 6px 8px;
+    text-align: center;
+    min-width: 58px;
+    font-family: 'Consolas', monospace;
+    font-size: 11.5px;
+  }
+  .codon-chip.mutated {
+    border-color: #ef4444;
+    background: rgba(239,68,68,0.18);
+    box-shadow: 0 0 12px rgba(239,68,68,0.35);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-area">
+    <h1>🧬 바이오테크 융합 통합 실험실 (6대 심화 실험 시뮬레이터)</h1>
+    <p>《바이오테크 시대》 기반 생명과학 × 컴퓨터공학 × 기계공학 6종 인터랙티브 실험 웹앱</p>
+  </div>
+  <div class="badge-group">
+    <span class="badge">사례1: DeepSpCas9 딥러닝 예측</span>
+    <span class="badge">사례2: AlphaFold & AlphaMissense</span>
+    <span class="badge">사례3: 마이크로 로봇 & 미세유체 칩</span>
+  </div>
+</header>
+
+<div class="container">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab(0)">
+      <span class="tab-num">1</span>
+      <div>
+        <div>[실험 1] 유전자가위 & AI 효율 점수</div>
+        <div style="font-size:10.5px;font-weight:400;opacity:0.8;">GC 함량 & DeepSpCas9 Seed 분석</div>
+      </div>
+    </button>
+    <button class="tab-btn" onclick="switchTab(1)">
+      <span class="tab-num">2</span>
+      <div>
+        <div>[실험 2] 돌연변이 타깃 & 해밍 거리</div>
+        <div style="font-size:10.5px;font-weight:400;opacity:0.8;">1bp Mismatch & 오프타겟 안전성</div>
+      </div>
+    </button>
+    <button class="tab-btn" onclick="switchTab(2)">
+      <span class="tab-num">3</span>
+      <div>
+        <div>[실험 3] 중심원리 번역 & AlphaFold</div>
+        <div style="font-size:10.5px;font-weight:400;opacity:0.8;">단백질 소수성 응집 & 적혈구 변형</div>
+      </div>
+    </button>
+    <button class="tab-btn" onclick="switchTab(3)">
+      <span class="tab-num">4</span>
+      <div>
+        <div>[실험 4] 로봇 직선 주행 & pH 방출</div>
+        <div style="font-size:10.5px;font-weight:400;opacity:0.8;">스토크스 유체역학 & 산성 반응 방출</div>
+      </div>
+    </button>
+    <button class="tab-btn" onclick="switchTab(4)">
+      <span class="tab-num">5</span>
+      <div>
+        <div>[실험 5] 미세유체 칩 세포 압축 전달</div>
+        <div style="font-size:10.5px;font-weight:400;opacity:0.8;">나노기공 형성 & 세포 생존율 최적화</div>
+      </div>
+    </button>
+    <button class="tab-btn" onclick="switchTab(5)">
+      <span class="tab-num">6</span>
+      <div>
+        <div>[실험 6] Y자 혈관 분기점 PID 조향</div>
+        <div style="font-size:10.5px;font-weight:400;opacity:0.8;">맥동 혈류 교란 극복 & 궤적 제어</div>
+      </div>
+    </button>
+  </div>
+
+  <!-- ================= TAB 1: CRISPR & DeepSpCas9 AI Score ================= -->
+  <div class="tab-content active" id="tab-0">
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-label">분석 대상 유전자 서열 길이</div>
+        <div class="kpi-val" id="kpi-len" style="color:#60a5fa;">151 bp</div>
+        <div class="kpi-sub">인간 베타글로빈(HBB) Exon 1</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">검출된 전체 PAM (5'-NGG-3') 후보</div>
+        <div class="kpi-val" id="kpi-total">18 개</div>
+        <div class="kpi-sub">Cas9 단백질 결합 가능 위치</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">조건 통과 최적 가이드 RNA 후보</div>
+        <div class="kpi-val" id="kpi-opt" style="color:#34d399;">11 개</div>
+        <div class="kpi-sub" id="kpi-opt-range">설정된 GC 함량 구간 충족</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">최고 AI 교정 효율 예측 후보</div>
+        <div class="kpi-val" id="kpi-best-ai" style="color:#c084fc;">C07 (98.0점)</div>
+        <div class="kpi-sub">Seed 구간 안정성 + GC 50% 최적</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div>
+        <div class="card">
+          <h2>🎛️ 실험 1 변인 조작 패널 (CRISPR & DeepSpCas9 모사)</h2>
+          <div class="control-group">
+            <label><span>표적 유전자 서열 프리셋 선택 / 직접 입력</span></label>
+            <div class="preset-btns">
+              <button class="btn active-preset" id="btn-wt" onclick="setDnaPreset('wt')">정상 HBB (베타글로빈)</button>
+              <button class="btn" id="btn-mut" onclick="setDnaPreset('mut')">HBB 겸상적혈구 변이</button>
+              <button class="btn" id="btn-brca1" onclick="setDnaPreset('brca1')">BRCA1 (유방암 억제 유전자)</button>
+              <button class="btn" id="btn-tp53" onclick="setDnaPreset('tp53')">TP53 (암억제 유전자)</button>
+              <button class="btn" id="btn-ins" onclick="setDnaPreset('ins')">INS (인슐린 유전자)</button>
+            </div>
+            <textarea id="dna-input" rows="3" oninput="runExp1()">ATGGTGCACCTGACTCCTGAGGAGAAGTCTGCCGTTACTGCCCTGTGGGGCAAGGTGAACGTGGATGAAGTTGGTGGTGAGGCCCTGGGCAGGTTGGTATCAAGGTTACAAGACAGGTTTAAGGAGACCAATAGAAACTGGGCATGTGGAG</textarea>
+          </div>
+
+          <div class="control-group">
+            <label><span>최소 GC 함량 기준 (Min GC %)</span><span id="val-gc-min" style="color:#34d399;">40 %</span></label>
+            <input type="range" id="slider-gc-min" min="20" max="60" step="5" value="40" oninput="runExp1()">
+          </div>
+
+          <div class="control-group">
+            <label><span>최대 GC 함량 기준 (Max GC %)</span><span id="val-gc-max" style="color:#34d399;">60 %</span></label>
+            <input type="range" id="slider-gc-max" min="45" max="80" step="5" value="60" oninput="runExp1()">
+          </div>
+
+          <div class="preset-btns">
+            <button class="btn" onclick="setGcPreset(40, 60)">표준 기준 (40~60% → 11개)</button>
+            <button class="btn" onclick="setGcPreset(45, 55)">★ 엄격 황금 기준 (45~55% → 최정예 4개)</button>
+          </div>
+
+          <div class="formula-box">
+            <strong>DeepSpCas9 AI 점수 산출 원리 (연세대 김형범 교수팀 연구 기반):</strong><br>
+            단순 전체 GC 함량뿐만 아니라, PAM(NGG) 바로 앞 8개 염기인 <strong>Seed 구간(13~20번째 염기)의 G/C 결합 안정성</strong>이 실제 절단 효율을 좌우합니다. 오른쪽 표에서 후보를 클릭하면 위치별 결합 에너지를 분석합니다!
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>🔬 선택된 후보의 위치별(1~20bp) 수소결합 & Seed 구간 분석</h2>
+          <div id="seed-detail-title" style="font-size:12.5px;color:#93c5fd;margin-bottom:8px;font-weight:700;">
+            표를 클릭하여 각 후보의 Seed 구간(PAM 직전 8bp) 결합력을 확인하세요.
+          </div>
+          <canvas id="canvas-seed" height="145"></canvas>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <h2>📊 후보별 GC 함량(%) 및 AI 예측 효율 점수 그래프</h2>
+          <canvas id="canvas-gc" height="220"></canvas>
+        </div>
+
+        <div class="card">
+          <h2>📋 검출된 CRISPR-Cas9 가이드 RNA 후보 목록 (클릭 시 상세 분석)</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>후보</th>
+                  <th>위치(bp)</th>
+                  <th>20bp 가이드 RNA (뒤 8글자 Seed)</th>
+                  <th>PAM</th>
+                  <th>GC함량</th>
+                  <th>AI 예측점수</th>
+                  <th>판정</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-exp1"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TAB 2: Mutation & Hamming Distance ================= -->
+  <div class="tab-content" id="tab-1">
+    <div class="grid-2">
+      <div class="card">
+        <h2>🎯 [실험 2-A] 정상 유전자(GAG) vs 겸상적혈구 돌연변이(GTG) 맞춤형 비교</h2>
+        <p style="font-size:12.5px;color:var(--muted);margin-bottom:12px;">
+          HBB 유전자 20번째 염기(6번 코돈 GAG의 A)를 치환하고 역방향 가닥(5'-CCN-3')까지 탐색하여, <strong>돌연변이 지점을 직접 덮는 환자 맞춤형 가이드 RNA 후보 2개</strong>의 1염기 불일치(1bp Mismatch)를 검증합니다.
+        </p>
+
+        <div class="control-group">
+          <label><span>돌연변이 20번째 염기 조작</span></label>
+          <div class="preset-btns">
+            <button class="btn" onclick="setMutBase('A')">정상 염기 (A → GAG 글루탐산)</button>
+            <button class="btn active-preset" onclick="setMutBase('T')">겸상적혈구 변이 (T → GTG 발린)</button>
+            <button class="btn" onclick="setMutBase('C')">가상 변이 (C → GCG 알라닌)</button>
+          </div>
+        </div>
+
+        <div id="mut-comparison-area"></div>
+
+        <div class="formula-box">
+          <strong>과학적 검증:</strong> Cas9 유전자가위는 표적 서열 내 1글자 불일치(Mismatch)가 발생하면 결합 에너지가 급감하여 정상 유전자는 절단하지 않고, 100% 일치하는 돌연변이 유전자만 선택적으로 교정합니다.
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>🛡️ [실험 2-B] 해밍 거리(Hamming Distance) 기반 오프타겟 안전성 매트릭스</h2>
+        <p style="font-size:12.5px;color:var(--muted);margin-bottom:12px;">
+          정보이론의 <strong>해밍 거리(두 문자열에서 글자가 다른 위치의 개수)</strong>를 계산하여, 각 후보가 유전자 내 다른 구간과 최소 몇 글자 이상 다른지(오프타겟 부작용 안전성) 평가합니다.
+        </p>
+        <canvas id="canvas-hd" height="290"></canvas>
+        <div class="formula-box">
+          <strong>최고 안전 후보 도출:</strong> 황금 GC 구간(45~55%)에 속한 <strong>C06(9bp 차이), C07(9bp 차이), C18(10bp 차이)</strong>은 유전자 내 다른 모든 구간과 9글자 이상 달라 오프타겟 위험이 사실상 0에 수렴합니다.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TAB 3: Central Dogma & AlphaFold/AlphaMissense ================= -->
+  <div class="tab-content" id="tab-2">
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-label">6번 코돈 번역 아미노산</div>
+        <div class="kpi-val" id="kpi-aa-name" style="color:#f87171;">발린 (Val, V)</div>
+        <div class="kpi-sub" id="kpi-codon-str">DNA: GTG → mRNA: GUG</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">아미노산 소수성 지수 (Kyte-Doolittle)</div>
+        <div class="kpi-val" id="kpi-hydro" style="color:#f59e0b;">+4.2 (강한 소수성)</div>
+        <div class="kpi-sub">정상 글루탐산(Glu): -3.5 (친수성)</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">AlphaMissense AI 병원성 점수</div>
+        <div class="kpi-val" id="kpi-patho" style="color:#ef4444;">0.96 (병원성 Pathogenic)</div>
+        <div class="kpi-sub">0.56 이상 시 질병 유발 판정</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">헤모글로빈 단백질 & 적혈구 형태</div>
+        <div class="kpi-val" id="kpi-rbc-shape" style="color:#ef4444;">낫 모양 응집 (Sickling)</div>
+        <div class="kpi-sub">소수성 결합에 의한 섬유화 사슬 형성</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h2>🧬 [실험 3] 중심원리(Central Dogma) 번역기 & 6번 코돈 변이 조작</h2>
+        <p style="font-size:12.5px;color:var(--muted);margin-bottom:12px;">
+          탐구사례 ②의 <strong>알파폴드(AlphaFold) 및 알파미스센스(AlphaMissense)</strong> 원리를 구현했습니다. HBB 유전자의 6번 코돈을 조작하여 mRNA 전사 → 아미노산 번역 → 단백질 표면 소수성 변화와 질병 유발 확률을 실험해 보세요!
+        </p>
+
+        <div class="control-group">
+          <label><span>6번 코돈(Codon 6) 염기서열 조작 (정상: GAG)</span></label>
+          <select id="sel-codon6" onchange="updateAlphaFoldSim()">
+            <option value="GAG">GAG → 글루탐산 (Glu, E) [정상: 친수성·음전하, 소수성 -3.5]</option>
+            <option value="GAA">GAA → 글루탐산 (Glu, E) [무증상 동질변이(Silent): 소수성 -3.5]</option>
+            <option value="GTG" selected>GTG → 발린 (Val, V) [겸상적혈구빈혈증(HbS): 강한 소수성 +4.2]</option>
+            <option value="AAG">AAG → 라이신 (Lys, K) [헤모글로빈 C병(HbC): 양전하 변이 -3.9]</option>
+            <option value="GCG">GCG → 알라닌 (Ala, A) [소수성 경미 변이: 소수성 +1.8]</option>
+            <option value="TAG">TAG → 종결 코돈 (STOP, *) [넌센스 돌연변이: 단백질 합성 조기 중단!]</option>
+          </select>
+        </div>
+
+        <div style="font-size:12.5px;font-weight:700;color:#93c5fd;margin-top:12px;">
+          ▶ 실시간 리보솜 코돈 번역 결과 (HBB 단백질 앞부분 1~15번 아미노산 사슬)
+        </div>
+        <div class="codon-grid" id="codon-chain-box"></div>
+
+        <div class="formula-box" style="margin-top:14px;">
+          <strong>알파폴드 & 알파미스센스 구조 생물학 원리:</strong><br>
+          정상 헤모글로빈 표면의 6번 아미노산인 <strong>글루탐산(Glu, 소수성 -3.5)</strong>은 친수성이라 혈액 속에서 독립 폴딩합니다. 반면 <strong>발린(Val, 소수성 +4.2)</strong>으로 치환되면 소수성 지수가 +7.7 급증하여 단백질 표면에 끈적한 소수성 패치(Sticky patch)가 형성되고, 사슬처럼 엉겨 붙어 적혈구를 낫 모양으로 변형시킵니다!
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <h2>
+            <span>🔬 단백질 3D 소수성 응집 & 적혈구 변형 실시간 시뮬레이션</span>
+            <span id="af-badge" class="pill pill-high">비정상 섬유화 응집 중</span>
+          </h2>
+          <canvas id="canvas-alphafold" height="230"></canvas>
+        </div>
+
+        <div class="card">
+          <h2>📊 정상(Glu) 대비 돌연변이별 AI 병원성 지수 (AlphaMissense Score)</h2>
+          <canvas id="canvas-missense-bar" height="175"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TAB 4: Microrobot Navigation & pH Drug Release ================= -->
+  <div class="tab-content" id="tab-3">
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-label">혈류 대비 로봇 순이동속도 (v_net)</div>
+        <div class="kpi-val" id="kpi-vnet" style="color:#34d399;">+6.38 mm/s</div>
+        <div class="kpi-sub" id="kpi-status-text">✅ 혈류 저항 돌파 및 표적 전진 성공!</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">역류 방지 최소 임계 자기장</div>
+        <div class="kpi-val" id="kpi-bcrit" style="color:#c084fc;">0.32 T/m</div>
+        <div class="kpi-sub" id="kpi-vessel-name">세동맥 (혈류 3.0 mm/s)</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">생체 환경 pH 반응 약물 방출률 (12시간)</div>
+        <div class="kpi-val" id="kpi-release12" style="color:#38bdf8;">92.9 %</div>
+        <div class="kpi-sub" id="kpi-ph-desc">종양 산성 환경(pH 6.0) 집중 방출</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">생분해성 로봇 체내 분해 완료 시간</div>
+        <div class="kpi-val" id="kpi-degrade" style="color:#34d399;">약 36 시간</div>
+        <div class="kpi-sub">키토산 하이드로겔 효소 가수분해</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h2>🤖 [실험 4] 마이크로 의료 로봇 직선 주행 & pH 반응형 약물 방출 제어</h2>
+        <div class="control-group">
+          <label><span>1. 주행 혈관 환경 선택 (점성도 η & 혈류 속도)</span></label>
+          <select id="sel-vessel" onchange="updateRobotSim()">
+            <option value="artery">대동맥 (Artery) — 점성도 3.5 mPa·s | 빠른 혈류 15.0 mm/s</option>
+            <option value="arteriole" selected>세동맥 (Arteriole) — 점성도 4.0 mPa·s | 중간 혈류 3.0 mm/s</option>
+            <option value="capillary">종양 모세혈관 (Capillary) — 점성도 5.0 mPa·s | 느린 혈류 0.5 mm/s</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label><span>2. 외부 자기장 기울기 조작 (∇B, Tesla/m)</span><span id="val-gradb" style="color:#60a5fa;">1.0 T/m</span></label>
+          <input type="range" id="slider-gradb" min="0.2" max="3.0" step="0.1" value="1.0" oninput="updateRobotSim()">
+        </div>
+
+        <div class="control-group">
+          <label><span>3. 생분해성 마이크로 로봇 반지름 (r, μm)</span><span id="val-radius" style="color:#34d399;">50 μm</span></label>
+          <input type="range" id="slider-radius" min="25" max="80" step="5" value="50" oninput="updateRobotSim()">
+        </div>
+
+        <div class="control-group">
+          <label><span>4. 표적 도착 후 주변 조직 산성도 (pH 제어 — 정상혈액 7.4 vs 종양 6.0)</span><span id="val-ph" style="color:#f43f5e;">pH 6.0 (종양 산성)</span></label>
+          <input type="range" id="slider-ph" min="5.6" max="7.4" step="0.2" value="6.0" oninput="updateRobotSim()">
+        </div>
+
+        <div class="formula-box">
+          <strong>생체 신호(pH) 감응형 스마트 약물 방출 원리 (박종오 교수팀 ACS Nano 논문 기반):</strong><br>
+          키토산 하이드로겔 로봇은 <strong>정상 혈액(pH 7.4)</strong>에서는 그물망이 촘촘해 유전자가위를 잃어버리지 않고 이동(12h 방출률 16.5%)하지만, <strong>종양 조직(pH 6.0)</strong>에 도착하면 아민기(-NH₂)가 양이온화(-NH₃⁺)되어 팽윤하며 표적 부위에만 유전자가위를 92.9% 집중 방출합니다!
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <h2>
+            <span>🩸 실시간 혈관 주행 & 표적 병변(종양) 도달 애니메이션</span>
+            <span id="anim-badge" class="pill pill-ok">표적 전진 중</span>
+          </h2>
+          <canvas id="canvas-vessel-anim" height="175"></canvas>
+        </div>
+
+        <div class="grid-equal">
+          <div class="card" style="margin-bottom:0;">
+            <h2>📈 자기장 기울기별 주행 속도 곡선</h2>
+            <canvas id="canvas-robot-chart" height="185"></canvas>
+          </div>
+          <div class="card" style="margin-bottom:0;">
+            <h2>🧪 조직 pH별 유전자가위 방출 곡선(0~24h)</h2>
+            <canvas id="canvas-ph-release" height="185"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TAB 5: Microfluidic Cell Squeezing (NEW EXPERIMENT!) ================= -->
+  <div class="tab-content" id="tab-4">
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-label">세포 기계적 압축 변형률 (Strain)</div>
+        <div class="kpi-val" id="kpi-sq-strain" style="color:#60a5fa;">50.0 %</div>
+        <div class="kpi-sub" id="kpi-sq-dim">세포 12μm → 채널 폭 6.0μm 통과</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">유전자가위(Cas9 RNP) 세포 내 전달률</div>
+        <div class="kpi-val" id="kpi-sq-deliv" style="color:#38bdf8;">81.7 %</div>
+        <div class="kpi-sub">일시적 나노기공(Nanopore) 확산 유입</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">통과 후 세포 생존율 (Viability)</div>
+        <div class="kpi-val" id="kpi-sq-viab" style="color:#34d399;">86.8 %</div>
+        <div class="kpi-sub">세포막 재밀봉(Resealing) 복원율</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">★ 최종 살아있는 교정 세포 수율 (Yield)</div>
+        <div class="kpi-val" id="kpi-sq-yield" style="color:#c084fc;">70.9 %</div>
+        <div class="kpi-sub" id="kpi-sq-status">✅ 최적 공정 (전달률 × 생존율 최대!)</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h2>🔬 [실험 5] 미세유체 세포 압축 칩(Microfluidic Cell Squeezing) 변인 조작</h2>
+        <p style="font-size:12.5px;color:var(--muted);margin-bottom:12px;">
+          보고서 본문 사례 ③의 <strong>"세포막을 일시적으로 여는 미세유체 칩(Cell Squeezing) 기계 기술"</strong> 실험입니다. 면역 T세포/조혈모세포(지름 12μm)를 좁은 미세 채널로 통과시킬 때 <strong>채널 폭</strong>과 <strong>유속</strong>을 조작하여 세포를 죽이지 않으면서 유전자가위 전달 수율(Yield)을 극대화하는 최적 조건을 찾아보세요!
+        </p>
+
+        <div class="control-group">
+          <label>
+            <span>1. 미세유체 협착 채널 폭 조작 (W_channel, μm) [세포 지름: 12.0μm]</span>
+            <span id="val-sq-width" style="color:#60a5fa;">6.0 μm (50% 압축)</span>
+          </label>
+          <input type="range" id="slider-sq-width" min="3.5" max="10.0" step="0.5" value="6.0" oninput="updateSqueezeSim()">
+        </div>
+
+        <div class="control-group">
+          <label>
+            <span>2. 미세유체 주입 유속 조작 (v_flow, mm/s)</span>
+            <span id="val-sq-speed" style="color:#34d399;">200 mm/s</span>
+          </label>
+          <input type="range" id="slider-sq-speed" min="50" max="400" step="25" value="200" oninput="updateSqueezeSim()">
+        </div>
+
+        <div class="preset-btns">
+          <button class="btn" onclick="setSqueezePreset(9.0, 200)">넓은 채널 (9.0μm → 기공 미형성 21%)</button>
+          <button class="btn active-preset" onclick="setSqueezePreset(6.0, 200)">★ 최적 압축 (6.0μm, 200mm/s → 수율 70.9%)</button>
+          <button class="btn" onclick="setSqueezePreset(4.0, 350)">과도한 압축 (4.0μm, 350mm/s → 세포 파열 2.5%)</button>
+        </div>
+
+        <div class="formula-box">
+          <strong>생명과학 × 기계공학(미세유체역학) 핵심 트레이드오프(Trade-off) 원리:</strong><br>
+          • 채널이 너무 넓으면(&gt;8μm): 세포 생존율은 97% 이상이지만 세포막에 기공이 안 열려 유전자가위가 못 들어갑니다.<br>
+          • 채널이 너무 좁거나 유속이 너무 빠르면(&lt;4.5μm, &gt;300mm/s): 과도한 전단 응력(Shear stress)으로 세포막이 영구 파열(Lysis)되어 세포가 죽습니다.<br>
+          • <strong>최적점:</strong> 세포 지름(12μm)의 <strong>50%인 6.0μm 채널 + 200mm/s 유속</strong>에서 최종 수율(70.9%)이 극대화됩니다!
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <h2>
+            <span>💧 실시간 미세유체 협착 채널 통과 & Cas9 나노기공 유입 애니메이션</span>
+            <span id="sq-badge" class="pill pill-ok">최적 나노기공 형성 중</span>
+          </h2>
+          <canvas id="canvas-squeeze-anim" height="190"></canvas>
+        </div>
+
+        <div class="card" style="margin-bottom:0;">
+          <h2>📈 채널 폭(W_channel) 변화에 따른 [전달 효율 vs 세포 생존율 vs 최종 수율] 트레이드오프 곡선</h2>
+          <canvas id="canvas-squeeze-chart" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TAB 6: 2D Bifurcation PID Steering Control (NEW EXPERIMENT!) ================= -->
+  <div class="tab-content" id="tab-5">
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-label">적용된 제어 알고리즘 상태</div>
+        <div class="kpi-val" id="kpi-pid-mode" style="color:#34d399;">PID 자동 조향</div>
+        <div class="kpi-sub" id="kpi-pid-gains">Kp = 2.5 | Kd = 0.8</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">경로 추적 오차 (RMSE)</div>
+        <div class="kpi-val" id="kpi-pid-rmse" style="color:#60a5fa;">5.5 μm</div>
+        <div class="kpi-sub">무제어(Kp=0) 시 87.9 μm (이탈)</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">맥동류 교란 억제율</div>
+        <div class="kpi-val" id="kpi-pid-suppress" style="color:#c084fc;">93.7 %</div>
+        <div class="kpi-sub">심장 박동 혈류 흔들림 보정</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Y자 혈관 분기점 표적 진입 판정</div>
+        <div class="kpi-val" id="kpi-pid-result" style="color:#34d399;">🎯 종양 혈관 진입 성공!</div>
+        <div class="kpi-sub">정상 장기 혈관 오진입 방지 완료</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h2>🧭 [실험 6] 2D Y자 혈관 분기점 마이크로 로봇 PID 자동 조향 제어 실험</h2>
+        <p style="font-size:12.5px;color:var(--muted);margin-bottom:12px;">
+          실제 혈관은 Y자로 갈라지며 심장 박동에 의한 <strong>맥동 혈류 교란(Pulsatile disturbance)</strong>이 로봇을 위쪽(정상 장기 혈관)으로 밀어냅니다. 컴퓨터·기계제어공학의 <strong>PID 피드백 제어 게인(Kp, Kd)</strong>을 조작하여 로봇을 아래쪽 <strong>🎯 표적 종양 혈관</strong>으로 정확히 조향해 보세요!
+        </p>
+
+        <div class="control-group">
+          <label>
+            <span>1. 비례 제어 게인 조작 (Proportional Gain, Kp — 경로 이탈 보정 강도)</span>
+            <span id="val-pid-kp" style="color:#34d399;">2.5 (최적 보정)</span>
+          </label>
+          <input type="range" id="slider-pid-kp" min="0.0" max="5.0" step="0.5" value="2.5" oninput="updatePidSim()">
+        </div>
+
+        <div class="control-group">
+          <label>
+            <span>2. 미분 제어 게인 조작 (Derivative Gain, Kd — 진동·오버슈트 억제)</span>
+            <span id="val-pid-kd" style="color:#60a5fa;">0.8 (진동 감쇠)</span>
+          </label>
+          <input type="range" id="slider-pid-kd" min="0.0" max="2.0" step="0.2" value="0.8" oninput="updatePidSim()">
+        </div>
+
+        <div class="control-group">
+          <label>
+            <span>3. 심장 박동 맥동류 교란 세기 (Pulsatile Disturbance, mm/s)</span>
+            <span id="val-pid-dist" style="color:#f59e0b;">1.5 mm/s</span>
+          </label>
+          <input type="range" id="slider-pid-dist" min="0.5" max="3.0" step="0.5" value="1.5" oninput="updatePidSim()">
+        </div>
+
+        <div class="preset-btns">
+          <button class="btn" onclick="setPidPreset(0.0, 0.0, 1.5)">❌ 무제어 (Kp=0 → 정상 혈관으로 오진입 실패!)</button>
+          <button class="btn" onclick="setPidPreset(4.5, 0.0, 2.0)">⚠️ 과도한 비례게인 (Kp=4.5, Kd=0 → 심한 진동)</button>
+          <button class="btn active-preset" onclick="setPidPreset(2.5, 0.8, 1.5)">★ 최적 PID 제어 (Kp=2.5, Kd=0.8 → 정밀 타깃팅)</button>
+        </div>
+
+        <div class="formula-box">
+          <strong>기계·로봇제어공학 PID 피드백 조향 방정식:</strong><br>
+          • 오차 e(t) = y_target(t) - y_robot(t)<br>
+          • 자기장 조향 제어 입력 u(t) = Kp · e(t) + Kd · (de(t)/dt)<br>
+          • <strong>Kp = 0(무제어)</strong>이면 맥동류 편향에 밀려 위쪽 정상 장기 혈관으로 잘못 들어가며, <strong>Kp = 2.5, Kd = 0.8</strong>일 때 오차(RMSE)가 5.5μm로 최소화되어 아래쪽 종양 혈관으로 완벽히 진입합니다!
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <h2>
+            <span>🛣️ 실시간 2D Y자 혈관 분기점(Bifurcation) 주행 궤적 시뮬레이션</span>
+            <span id="pid-badge" class="pill pill-ok">종양 분기점 조향 성공</span>
+          </h2>
+          <canvas id="canvas-pid-anim" height="220"></canvas>
+        </div>
+
+        <div class="card" style="margin-bottom:0;">
+          <h2>📉 시간(t)에 따른 목표 경로 대비 로봇 위치 오차 e(t) 수렴 그래프</h2>
+          <canvas id="canvas-pid-chart" height="170"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const WT_DNA = "ATGGTGCACCTGACTCCTGAGGAGAAGTCTGCCGTTACTGCCCTGTGGGGCAAGGTGAACGTGGATGAAGTTGGTGGTGAGGCCCTGGGCAGGTTGGTATCAAGGTTACAAGACAGGTTTAAGGAGACCAATAGAAACTGGGCATGTGGAG";
+const MUT_DNA = WT_DNA.slice(0, 19) + "T" + WT_DNA.slice(20);
+const GENE_PRESETS = {
+  wt: { name: "인간 베타글로빈(HBB) Exon 1 (정상)", seq: WT_DNA },
+  mut: { name: "인간 베타글로빈(HBB) Exon 1 (겸상적혈구 변이 A→T)", seq: MUT_DNA },
+  brca1: { name: "인간 BRCA1 (유방암 억제 유전자 CDS 일부)", seq: "ATGGATTTATCTGCTCTTCGCGTTGAAGAAGTACAAAATGTCATTAATGCTATGCAGAAAATCTTAGAGTGTCCCATCTGTCTGGAGTTGATCAAGGAACCTGTCTCCACAAAGTGTGACCACATATTTTGCAAATTTTGCATGCTGAAACTTCTCAACCAGAAGAAAGGGCCTTCACAGTGTCCTTTATGTAAGAATGATATAACCAAA" },
+  tp53: { name: "인간 TP53 (종양 억제 단백질 p53 CDS 일부)", seq: "ATGGAGGAGCCGCAGTCAGATCCTAGCGTCGAGCCCCCTCTGAGTCAGGAAACATTTTCAGACCTATGGAAACTACTTCCTGAAAACAACGTTCTGTCCCCCTTGCCGTCCCAAGCAATGGATGATTTGATGCTGTCCCCGGACGATATTGAACAATGGTTCACTGAAGACCCAGGTCCAGATGAAGCTCCCAGAATGCCAGAGGCTGCT" },
+  ins: { name: "인간 INS (인슐린 유전자 CDS 일부)", seq: "ATGGCCCTGTGGATGCGCCTCCTGCCCCTGCTGGCGCTGCTGGCCCTCTGGGGACCTGACCCAGCCGCAGCCTTTGTGAACCAACACCTGTGCGGCTCACACCTGGTGGAAGCTCTCTACCTAGTGTGCGGGGGAACGAGGCTTCTTCTACACACCCAAGACCCGCCGGGAGGCAGAGGACCTGCAGGTGGGGCAGGTGGAGCTGGGC" }
+};
+
+let currentCands = [];
+let selectedCandIdx = 6;
+let currentMutBase = 'T';
+
+function switchTab(idx) {
+  document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+  document.querySelectorAll('.tab-content').forEach((c, i) => c.classList.toggle('active', i === idx));
+  if (idx === 0) runExp1();
+  if (idx === 1) { renderMutComparison(); drawHdChart(); }
+  if (idx === 2) updateAlphaFoldSim();
+  if (idx === 3) updateRobotSim();
+  if (idx === 4) updateSqueezeSim();
+  if (idx === 5) updatePidSim();
+}
+
+function setDnaPreset(mode) {
+  ['wt', 'mut', 'brca1', 'tp53', 'ins'].forEach(k => {
+    const el = document.getElementById('btn-' + k);
+    if (el) el.classList.toggle('active-preset', k === mode);
+  });
+  const preset = GENE_PRESETS[mode] || GENE_PRESETS.wt;
+  document.getElementById('dna-input').value = preset.seq;
+  const subEl = document.querySelector('#tab-0 .kpi-card .kpi-sub');
+  if (subEl) subEl.textContent = preset.name;
+  runExp1();
+}
+
+function setGcPreset(minV, maxV) {
+  document.getElementById('slider-gc-min').value = minV;
+  document.getElementById('slider-gc-max').value = maxV;
+  runExp1();
+}
+
+function runExp1() {
+  const raw = document.getElementById('dna-input').value.toUpperCase().replace(/[^ATGC]/g, '');
+  let minGc = parseInt(document.getElementById('slider-gc-min').value);
+  let maxGc = parseInt(document.getElementById('slider-gc-max').value);
+  if (minGc > maxGc) { const t = minGc; minGc = maxGc; maxGc = t; }
+
+  document.getElementById('val-gc-min').textContent = minGc + " %";
+  document.getElementById('val-gc-max').textContent = maxGc + " %";
+
+  currentCands = [];
+  for (let i = 20; i <= raw.length - 3; i++) {
+    const pam = raw.slice(i, i + 3);
+    if (pam.slice(1) === "GG") {
+      const g = raw.slice(i - 20, i);
+      let gcCount = 0;
+      for (const ch of g) if (ch === 'G' || ch === 'C') gcCount++;
+      const gc = (gcCount / 20) * 100;
+
+      const seed = g.slice(12, 20);
+      let seedGc = 0;
+      for (const ch of seed) if (ch === 'G' || ch === 'C') seedGc++;
+      const seedGcPct = (seedGc / 8) * 100;
+
+      let minHd = 20;
+      for (let j = 0; j <= raw.length - 20; j++) {
+        if (j === i - 20) continue;
+        const sub = raw.slice(j, j + 20);
+        let hd = 0;
+        for (let k = 0; k < 20; k++) if (g[k] !== sub[k]) hd++;
+        if (hd < minHd) minHd = hd;
+      }
+
+      let aiScore = 96.0 - Math.abs(gc - 50) * 1.45 - Math.abs(seedGcPct - 55) * 0.25 + (minHd - 8) * 1.1;
+      if (g.includes("TTT")) aiScore -= 12;
+      if (g[19] === 'G') aiScore += 2.2;
+      aiScore = Math.max(25, Math.min(98.5, aiScore));
+
+      const cid = "C" + String(currentCands.length + 1).padStart(2, '0');
+      let status = "opt";
+      if (gc > maxGc) status = "high";
+      else if (gc < minGc) status = "low";
+
+      currentCands.push({ cid, start: i - 20, end: i, seq: g, seed, pam, gc, seedGcPct, minHd, aiScore, status });
+    }
+  }
+
+  const optCount = currentCands.filter(c => c.status === 'opt').length;
+  let bestCand = currentCands[0];
+  currentCands.forEach(c => { if (c.aiScore > bestCand.aiScore) bestCand = c; });
+
+  document.getElementById('kpi-len').textContent = raw.length + " bp";
+  document.getElementById('kpi-total').textContent = currentCands.length + " 개";
+  document.getElementById('kpi-opt').textContent = optCount + " 개";
+  document.getElementById('kpi-opt-range').textContent = `GC ${minGc}% ~ ${maxGc}% 기준 충족`;
+  if (bestCand) {
+    document.getElementById('kpi-best-ai').textContent = `${bestCand.cid} (${bestCand.aiScore.toFixed(1)}점)`;
+  }
+
+  const tbody = document.getElementById('tbody-exp1');
+  tbody.innerHTML = currentCands.map((c, idx) => {
+    const pill = c.status === 'opt'
+      ? `<span class="pill pill-ok">✅ 최적 후보</span>`
+      : (c.status === 'high' ? `<span class="pill pill-high">❌ GC 과다</span>` : `<span class="pill pill-low">❌ GC 부족</span>`);
+    const seqHtml = `${c.seq.slice(0,12)}<strong style="color:#38bdf8;text-decoration:underline;">${c.seq.slice(12)}</strong>`;
+    return `<tr class="${c.status === 'opt' ? 'row-opt' : ''}" onclick="selectCand(${idx})">
+      <td><strong>${c.cid}</strong></td>
+      <td>${c.start}~${c.end}</td>
+      <td class="mono">${seqHtml}</td>
+      <td class="mono"><strong>${c.pam}</strong></td>
+      <td><strong>${c.gc.toFixed(0)}%</strong></td>
+      <td style="color:#c084fc;font-weight:700;">${c.aiScore.toFixed(1)}점</td>
+      <td>${pill}</td>
+    </tr>`;
+  }).join('');
+
+  drawGcChart(minGc, maxGc);
+  if (selectedCandIdx >= currentCands.length) selectedCandIdx = 0;
+  if (currentCands.length > 0) drawSeedChart(currentCands[selectedCandIdx]);
+}
+
+function selectCand(idx) {
+  selectedCandIdx = idx;
+  drawSeedChart(currentCands[idx]);
+}
+
+function drawSeedChart(cand) {
+  if (!cand) return;
+  document.getElementById('seed-detail-title').innerHTML =
+    `선택된 후보: <span style="color:#34d399;">${cand.cid} (${cand.start}~${cand.end}bp)</span> | 전체 GC: ${cand.gc.toFixed(0)}% | Seed 구간(13~20번) GC: ${cand.seedGcPct.toFixed(1)}% | AI 예측 점수: <span style="color:#c084fc;">${cand.aiScore.toFixed(1)}점</span>`;
+
+  const canvas = document.getElementById('canvas-seed');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = 145 * dpr;
+  ctx.scale(dpr, dpr);
+
+  const W = rect.width, H = 145;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 36, padR = 16, padT = 24, padB = 32;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const step = plotW / 20;
+
+  ctx.fillStyle = "rgba(56, 189, 248, 0.12)";
+  ctx.fillRect(padL + 12 * step, padT - 6, 8 * step, plotH + 10);
+  ctx.fillStyle = "#38bdf8";
+  ctx.font = "bold 10px sans-serif";
+  ctx.fillText("★ Seed 핵심 결합 구간 (13~20bp, PAM 인접)", padL + 12 * step + 6, padT + 8);
+
+  for (let i = 0; i < 20; i++) {
+    const base = cand.seq[i];
+    const hbonds = (base === 'G' || base === 'C') ? 3 : 2;
+    const x = padL + i * step + step * 0.15;
+    const bw = step * 0.7;
+    const bh = (hbonds / 3.5) * plotH;
+    const y = padT + plotH - bh;
+
+    ctx.fillStyle = hbonds === 3 ? (i >= 12 ? "#06b6d4" : "#3b82f6") : "#64748b";
+    ctx.beginPath();
+    ctx.roundRect(x, y, bw, bh, 3);
+    ctx.fill();
+
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 10px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText(base, x + bw / 2, H - 14);
+    ctx.fillStyle = "#cbd5e1";
+    ctx.font = "9px sans-serif";
+    ctx.fillText(hbonds + "H", x + bw / 2, y - 4);
+  }
+}
+
+function drawGcChart(minGc, maxGc) {
+  const canvas = document.getElementById('canvas-gc');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = 220 * dpr;
+  ctx.scale(dpr, dpr);
+
+  const W = rect.width, H = 220;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 42, padR = 16, padT = 22, padB = 34;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const yPos = val => padT + plotH - (val / 100) * plotH;
+
+  const yTop = yPos(maxGc), yBot = yPos(minGc);
+  ctx.fillStyle = "rgba(16, 185, 129, 0.14)";
+  ctx.fillRect(padL, yTop, plotW, yBot - yTop);
+
+  ctx.strokeStyle = "#10b981";
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(padL, yTop); ctx.lineTo(W - padR, yTop);
+  ctx.moveTo(padL, yBot); ctx.lineTo(W - padR, yBot);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = "10.5px sans-serif";
+  for (let g = 0; g <= 100; g += 20) {
+    const y = yPos(g);
+    ctx.strokeStyle = "rgba(148,163,184,0.14)";
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+    ctx.fillText(g + "%", 6, y + 4);
+  }
+
+  if (currentCands.length === 0) return;
+  const step = plotW / currentCands.length;
+  const barW = Math.min(26, step * 0.62);
+
+  currentCands.forEach((c, idx) => {
+    const x = padL + idx * step + (step - barW) / 2;
+    const y = yPos(c.gc);
+    const h = padT + plotH - y;
+
+    ctx.fillStyle = c.status === 'opt' ? "#3b82f6" : (c.status === 'high' ? "#ef4444" : "#f59e0b");
+    ctx.beginPath();
+    ctx.roundRect(x, y, barW, h, 4);
+    ctx.fill();
+
+    ctx.fillStyle = "#94a3b8";
+    ctx.font = "10px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(c.cid, x + barW / 2, H - 11);
+  });
+
+  ctx.strokeStyle = "#c084fc";
+  ctx.lineWidth = 2.2;
+  ctx.beginPath();
+  currentCands.forEach((c, idx) => {
+    const cx = padL + idx * step + step / 2;
+    const cy = yPos(c.aiScore);
+    if (idx === 0) ctx.moveTo(cx, cy); else ctx.lineTo(cx, cy);
+  });
+  ctx.stroke();
+
+  currentCands.forEach((c, idx) => {
+    const cx = padL + idx * step + step / 2;
+    const cy = yPos(c.aiScore);
+    ctx.fillStyle = "#c084fc";
+    ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.fill();
+  });
+}
+
+// ================= TAB 2 =================
+function setMutBase(base) {
+  currentMutBase = base;
+  renderMutComparison();
+}
+
+function renderMutComparison() {
+  const mutSeq = WT_DNA.slice(0, 19) + currentMutBase + WT_DNA.slice(20);
+  const rev = { A: 'T', T: 'A', G: 'C', C: 'G' };
+  let html = "";
+
+  for (let i = 0; i <= WT_DNA.length - 23; i++) {
+    if (WT_DNA.slice(i, i + 2) === "CC" && (i <= 19 && 19 < i + 23)) {
+      const wtSub = WT_DNA.slice(i + 3, i + 23).split('').reverse().map(b => rev[b]).join('');
+      const mutSub = mutSeq.slice(i + 3, i + 23).split('').reverse().map(b => rev[b]).join('');
+      const pamRc = WT_DNA.slice(i, i + 3).split('').reverse().map(b => rev[b]).join('');
+
+      let wtHtml = "", mutHtml = "";
+      for (let k = 0; k < 20; k++) {
+        if (wtSub[k] !== mutSub[k]) {
+          wtHtml += `<span class="mismatch-char">${wtSub[k]}</span>`;
+          mutHtml += `<span class="mismatch-char">${mutSub[k]}</span>`;
+        } else {
+          wtHtml += `<span class="match-char">${wtSub[k]}</span>`;
+          mutHtml += `<span class="match-char">${mutSub[k]}</span>`;
+        }
+      }
+
+      html += `<div class="dna-box">
+        <div style="font-size:12px;color:#93c5fd;margin-bottom:6px;font-weight:700;">
+          ▶ 역방향 표적 구간: ${i+3}~${i+23}bp (PAM: ${pamRc}, GC함량: 55.0%)
+        </div>
+        <div>정상인 유전자 표적 : 5'- ${wtHtml} -3'</div>
+        <div style="margin-top:4px;">환자 맞춤형 가위   : 5'- ${mutHtml} -3'</div>
+      </div>`;
+    }
+  }
+  document.getElementById('mut-comparison-area').innerHTML = html;
+}
+
+function drawHdChart() {
+  const canvas = document.getElementById('canvas-hd');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = 290 * dpr;
+  ctx.scale(dpr, dpr);
+
+  const W = rect.width, H = 290;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 48, padR = 20, padT = 24, padB = 42;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const xPos = gc => padL + ((gc - 30) / 45) * plotW;
+  const yPos = hd => padT + plotH - ((hd - 6) / 6) * plotH;
+
+  ctx.fillStyle = "rgba(16, 185, 129, 0.12)";
+  ctx.fillRect(xPos(45), padT, xPos(55) - xPos(45), plotH);
+
+  ctx.strokeStyle = "rgba(148,163,184,0.18)";
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = "11px sans-serif";
+  for (let hd = 7; hd <= 11; hd++) {
+    const y = yPos(hd);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+    ctx.fillText(hd + "bp", 10, y + 4);
+  }
+  for (let gc = 35; gc <= 70; gc += 5) {
+    const x = xPos(gc);
+    ctx.fillText(gc + "%", x - 10, H - 14);
+  }
+
+  currentCands.forEach(c => {
+    const x = xPos(c.gc), y = yPos(c.minHd);
+    const isGold = c.gc >= 45 && c.gc <= 55;
+    ctx.fillStyle = isGold ? "#10b981" : (c.gc >= 40 && c.gc <= 60 ? "#3b82f6" : "#ef4444");
+    ctx.beginPath(); ctx.arc(x, y, isGold ? 8 : 6, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = "#f8fafc"; ctx.font = "bold 10px sans-serif";
+    ctx.fillText(c.cid, x - 9, y - 10);
+  });
+}
+
+// ================= TAB 3: Central Dogma & AlphaFold Simulation =================
+const CODON_MAP = {
+  ATG: { aa: 'Met (M)', kr: '메싸이오닌', hydro: 1.9 },
+  GTG: { aa: 'Val (V)', kr: '발린', hydro: 4.2 },
+  CAC: { aa: 'His (H)', kr: '히스티딘', hydro: -3.2 },
+  CTG: { aa: 'Leu (L)', kr: '류신', hydro: 3.8 },
+  ACT: { aa: 'Thr (T)', kr: '트레오닌', hydro: -0.7 },
+  CCT: { aa: 'Pro (P)', kr: '프롤린', hydro: -1.6 },
+  GAG: { aa: 'Glu (E)', kr: '글루탐산', hydro: -3.5 },
+  GAA: { aa: 'Glu (E)', kr: '글루탐산', hydro: -3.5 },
+  AAG: { aa: 'Lys (K)', kr: '라이신', hydro: -3.9 },
+  GCG: { aa: 'Ala (A)', kr: '알라닌', hydro: 1.8 },
+  TAG: { aa: 'STOP (*)', kr: '종결코돈', hydro: 0.0 },
+  AGT: { aa: 'Ser (S)', kr: '세린', hydro: -0.8 },
+  TCT: { aa: 'Ser (S)', kr: '세린', hydro: -0.8 },
+  GCC: { aa: 'Ala (A)', kr: '알라닌', hydro: 1.8 },
+  GTT: { aa: 'Val (V)', kr: '발린', hydro: 4.2 },
+  ACA: { aa: 'Thr (T)', kr: '트레오닌', hydro: -0.7 }
+};
+
+let afMode = "GTG";
+
+function updateAlphaFoldSim() {
+  const c6 = document.getElementById('sel-codon6').value;
+  afMode = c6;
+  const modDna = WT_DNA.slice(0, 18) + c6 + WT_DNA.slice(21);
+
+  let chainHtml = "";
+  for (let idx = 0; idx < 15; idx++) {
+    const codon = modDna.slice(idx * 3, idx * 3 + 3);
+    const rna = codon.replace(/T/g, 'U');
+    const info = CODON_MAP[codon] || { aa: 'AA', kr: '아미노산', hydro: 0 };
+    const isTarget = (idx === 6);
+    chainHtml += `<div class="codon-chip ${isTarget ? 'mutated' : ''}">
+      <div style="font-size:10px;color:#94a3b8;">#${idx} ${rna}</div>
+      <div style="font-weight:800;color:${isTarget ? '#fca5a5' : '#38bdf8'};margin-top:2px;">${info.aa}</div>
+      <div style="font-size:10px;color:#cbd5e1;">${info.kr}</div>
+    </div>`;
+    if (codon === "TAG") break;
+  }
+  document.getElementById('codon-chain-box').innerHTML = chainHtml;
+
+  const variants = {
+    GAG: { name: "글루탐산 (Glu, E)", hydro: -3.5, desc: "-3.5 (친수성·음전하)", patho: 0.04, pLabel: "0.04 (양성 Benign)", shape: "정상 원반형 (Normal)", col: "#34d399" },
+    GAA: { name: "글루탐산 (Glu, E)", hydro: -3.5, desc: "-3.5 (친수성·동질변이)", patho: 0.06, pLabel: "0.06 (양성 Benign)", shape: "정상 원반형 (Normal)", col: "#34d399" },
+    GTG: { name: "발린 (Val, V)", hydro: 4.2, desc: "+4.2 (강한 소수성 패치!)", patho: 0.96, pLabel: "0.96 (병원성 Pathogenic)", shape: "낫 모양 응집 (Sickling)", col: "#ef4444" },
+    AAG: { name: "라이신 (Lys, K)", hydro: -3.9, desc: "-3.9 (양전하 역전 HbC)", patho: 0.78, pLabel: "0.78 (병원성 HbC 질환)", shape: "결정화 변형 (HbC)", col: "#f59e0b" },
+    GCG: { name: "알라닌 (Ala, A)", hydro: 1.8, desc: "+1.8 (약한 소수성)", patho: 0.42, pLabel: "0.42 (경계성 Ambiguous)", shape: "경미한 구조 변화", col: "#60a5fa" },
+    TAG: { name: "종결 코돈 (STOP)", hydro: 0.0, desc: "단백질 합성 중단", patho: 0.99, pLabel: "0.99 (치명적 β0-지중해빈혈)", shape: "단백질 결손 (중증 빈혈)", col: "#ef4444" }
+  };
+
+  const v = variants[c6];
+  document.getElementById('kpi-aa-name').textContent = v.name;
+  document.getElementById('kpi-aa-name').style.color = v.col;
+  document.getElementById('kpi-codon-str').textContent = `DNA: ${c6} → mRNA: ${c6.replace(/T/g,'U')}`;
+  document.getElementById('kpi-hydro').textContent = v.desc;
+  document.getElementById('kpi-patho').textContent = v.pLabel;
+  document.getElementById('kpi-patho').style.color = v.col;
+  document.getElementById('kpi-rbc-shape').textContent = v.shape;
+  document.getElementById('kpi-rbc-shape').style.color = v.col;
+
+  const badge = document.getElementById('af-badge');
+  if (c6 === 'GAG' || c6 === 'GAA') {
+    badge.textContent = "✅ 정상 독립 폴딩 (친수성 표면)";
+    badge.className = "pill pill-ok";
+  } else {
+    badge.textContent = "⚠️ 비정상 구조 변형 / 병원성 검출";
+    badge.className = "pill pill-high";
+  }
+
+  drawMissenseBarChart(c6);
+}
+
+function drawMissenseBarChart(activeCodon) {
+  const canvas = document.getElementById('canvas-missense-bar');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = 175 * dpr;
+  ctx.scale(dpr, dpr);
+
+  const W = rect.width, H = 175;
+  ctx.clearRect(0, 0, W, H);
+
+  const items = [
+    { code: 'GAG', label: 'GAG(정상 Glu)', score: 0.04 },
+    { code: 'GAA', label: 'GAA(동질 Glu)', score: 0.06 },
+    { code: 'GCG', label: 'GCG(Ala 변이)', score: 0.42 },
+    { code: 'AAG', label: 'AAG(Lys HbC)', score: 0.78 },
+    { code: 'GTG', label: 'GTG(Val 겸상)', score: 0.96 },
+    { code: 'TAG', label: 'TAG(종결코돈)', score: 0.99 }
+  ];
+
+  const padL = 44, padR = 16, padT = 22, padB = 30;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const step = plotW / items.length;
+  const barW = Math.min(38, step * 0.6);
+
+  const yThresh = padT + plotH - 0.56 * plotH;
+  ctx.strokeStyle = "#ef4444";
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(padL, yThresh); ctx.lineTo(W - padR, yThresh); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = "#fca5a5";
+  ctx.font = "10px sans-serif";
+  ctx.fillText("병원성 임계점 (0.56)", W - padR - 95, yThresh - 5);
+
+  items.forEach((it, idx) => {
+    const x = padL + idx * step + (step - barW) / 2;
+    const bh = it.score * plotH;
+    const y = padT + plotH - bh;
+
+    ctx.fillStyle = it.score >= 0.56 ? "#ef4444" : (it.score >= 0.3 ? "#f59e0b" : "#10b981");
+    if (it.code === activeCodon) {
+      ctx.shadowColor = "#fff";
+      ctx.shadowBlur = 10;
+    }
+    ctx.beginPath(); ctx.roundRect(x, y, barW, bh, 4); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 10px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(it.score.toFixed(2), x + barW / 2, y - 5);
+
+    ctx.fillStyle = it.code === activeCodon ? "#38bdf8" : "#94a3b8";
+    ctx.font = "10px sans-serif";
+    ctx.fillText(it.label, x + barW / 2, H - 10);
+  });
+}
+
+// ================= TAB 4: Microrobot & pH Release =================
+const VESSELS = {
+  artery: { name: "대동맥 (혈류 15.0 mm/s)", eta: 3.5e-3, vBlood: 15.0 },
+  arteriole: { name: "세동맥 (혈류 3.0 mm/s)", eta: 4.0e-3, vBlood: 3.0 },
+  capillary: { name: "종양 모세혈관 (혈류 0.5 mm/s)", eta: 5.0e-3, vBlood: 0.5 }
+};
+
+let simState = { vBlood: 3.0, vProp: 9.38, vNet: 6.38, robotX: 120, rbcs: [], ph: 6.0 };
+for (let i = 0; i < 26; i++) {
+  simState.rbcs.push({ x: Math.random() * 600, y: 25 + Math.random() * 125, r: 5 + Math.random() * 3.5 });
+}
+
+function updateRobotSim() {
+  const vKey = document.getElementById('sel-vessel').value;
+  const vessel = VESSELS[vKey];
+  const gradB = parseFloat(document.getElementById('slider-gradb').value);
+  const rUm = parseFloat(document.getElementById('slider-radius').value);
+  const ph = parseFloat(document.getElementById('slider-ph').value);
+  const magFrac = 0.15;
+
+  document.getElementById('val-gradb').textContent = gradB.toFixed(1) + " T/m";
+  document.getElementById('val-radius').textContent = `${rUm} μm`;
+  document.getElementById('val-ph').textContent = `pH ${ph.toFixed(1)} (${ph <= 6.4 ? '종양 산성' : (ph <= 7.0 ? '약산성' : '정상 혈액')})`;
+
+  const r = rUm * 1e-6;
+  const Vm = (4 / 3) * Math.PI * Math.pow(r, 3) * magFrac;
+  const Ms = 4.5e5;
+  const Fmag = Vm * Ms * gradB;
+  const vProp = (Fmag / (6 * Math.PI * vessel.eta * r)) * 1000;
+  const vNet = vProp - vessel.vBlood;
+  const bCrit = (vessel.vBlood / 1000 * 6 * Math.PI * vessel.eta * r) / (Vm * Ms);
+
+  const kPh = 0.015 + 0.205 * Math.pow(Math.max(0, (7.4 - ph) / 1.4), 1.6);
+  const rel12 = 100 * (1 - Math.exp(-kPh * 12));
+  const degHours = Math.round(72 - (7.4 - ph) * 25);
+
+  simState.vBlood = vessel.vBlood;
+  simState.vProp = vProp;
+  simState.vNet = vNet;
+  simState.ph = ph;
+
+  document.getElementById('kpi-vnet').textContent = (vNet >= 0 ? "+" : "") + vNet.toFixed(2) + " mm/s";
+  document.getElementById('kpi-vnet').style.color = vNet > 0 ? "#34d399" : "#f87171";
+  document.getElementById('kpi-bcrit').textContent = bCrit.toFixed(2) + " T/m";
+  document.getElementById('kpi-vessel-name').textContent = vessel.name;
+  document.getElementById('kpi-release12').textContent = rel12.toFixed(1) + " %";
+  document.getElementById('kpi-ph-desc').textContent = `pH ${ph.toFixed(1)} 환경 (방출상수 k=${kPh.toFixed(3)}/h)`;
+  document.getElementById('kpi-degrade').textContent = `약 ${degHours} 시간`;
+
+  const statusEl = document.getElementById('kpi-status-text');
+  const badgeEl = document.getElementById('anim-badge');
+  if (vNet > 0) {
+    statusEl.textContent = "✅ 혈류 저항 돌파 및 표적 전진 성공!";
+    badgeEl.textContent = "표적 전진 주행 중 (v_net > 0)";
+    badgeEl.className = "pill pill-ok";
+  } else {
+    statusEl.textContent = "❌ 혈류에 밀려 역류 중 (자기장 상향 필요)";
+    badgeEl.textContent = "혈류에 밀려 역류 중 (v_net < 0)";
+    badgeEl.className = "pill pill-high";
+  }
+
+  drawRobotChart(r, magFrac, gradB);
+  drawPhReleaseChart(ph, kPh);
+}
+
+function drawRobotChart(r, magFrac, currentGradB) {
+  const canvas = document.getElementById('canvas-robot-chart');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = 185 * dpr;
+  ctx.scale(dpr, dpr);
+
+  const W = rect.width, H = 185;
+  ctx.clearRect(0, 0, W, H);
+  const padL = 40, padR = 14, padT = 16, padB = 28;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const xPos = b => padL + ((b - 0.2) / 2.8) * plotW;
+  const yPos = v => padT + plotH - ((v + 18) / 48) * plotH;
+
+  const yZero = yPos(0);
+  ctx.strokeStyle = "#64748b";
+  ctx.beginPath(); ctx.moveTo(padL, yZero); ctx.lineTo(W - padR, yZero); ctx.stroke();
+
+  const Vm = (4 / 3) * Math.PI * Math.pow(r, 3) * magFrac;
+  const Ms = 4.5e5;
+  const configs = [
+    { key: 'artery', col: '#ef4444' },
+    { key: 'arteriole', col: '#3b82f6' },
+    { key: 'capillary', col: '#10b981' }
+  ];
+
+  configs.forEach(cfg => {
+    const v = VESSELS[cfg.key];
+    ctx.strokeStyle = cfg.col;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let b = 0.2; b <= 3.01; b += 0.1) {
+      const vp = (Vm * Ms * b) / (6 * Math.PI * v.eta * r) * 1000;
+      const vn = vp - v.vBlood;
+      const x = xPos(b), y = yPos(Math.max(-18, Math.min(30, vn)));
+      if (b === 0.2) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  });
+
+  const cx = xPos(currentGradB);
+  ctx.strokeStyle = "#f8fafc";
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(cx, padT); ctx.lineTo(cx, padT + plotH); ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function drawPhReleaseChart(currentPh, currentK) {
+  const canvas = document.getElementById('canvas-ph-release');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = 185 * dpr;
+  ctx.scale(dpr, dpr);
+
+  const W = rect.width, H = 185;
+  ctx.clearRect(0, 0, W, H);
+  const padL = 38, padR = 14, padT = 16, padB = 28;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+
+  const xPos = t => padL + (t / 24) * plotW;
+  const yPos = r => padT + plotH - (r / 100) * plotH;
+
+  const curves = [
+    { k: 0.015, col: '#64748b', ls: [4,4] },
+    { k: currentK, col: '#f43f5e', ls: [] }
+  ];
+
+  curves.forEach(c => {
+    ctx.strokeStyle = c.col;
+    ctx.lineWidth = 2.2;
+    ctx.setLineDash(c.ls);
+    ctx.beginPath();
+    for (let t = 0; t <= 24; t += 1) {
+      const rel = 100 * (1 - Math.exp(-c.k * t));
+      const x = xPos(t), y = yPos(rel);
+      if (t === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+  });
+
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = "10px sans-serif";
+  ctx.fillText("100%", 4, yPos(100) + 4);
+  ctx.fillText("0%", 12, yPos(0));
+  ctx.fillText("12h", xPos(12) - 8, H - 8);
+  ctx.fillText("24h", xPos(24) - 14, H - 8);
+}
+
+// ================= TAB 5: Microfluidic Cell Squeezing =================
+let sqState = { wCh: 6.0, vFlow: 200, deliv: 81.7, viab: 86.8, yieldPct: 70.9, cells: [40, 180, 320, 460] };
+
+function setSqueezePreset(w, v) {
+  document.getElementById('slider-sq-width').value = w;
+  document.getElementById('slider-sq-speed').value = v;
+  updateSqueezeSim();
+}
+
+function calcSqueezeMetrics(wCh, vFlow) {
+  const D = 12.0;
+  const strain = Math.max(0, (D - wCh) / D);
+  const S = strain * Math.pow(vFlow / 150.0, 0.6);
+  const deliv = 96.0 / (1.0 + Math.exp(-10.0 * (S - 0.42)));
+  const viab = 98.0 / (1.0 + Math.exp(11.0 * (S - 0.78)));
+  const yieldPct = (deliv * viab) / 100.0;
+  return { strain: strain * 100, deliv, viab, yieldPct };
+}
+
+function updateSqueezeSim() {
+  const wCh = parseFloat(document.getElementById('slider-sq-width').value);
+  const vFlow = parseFloat(document.getElementById('slider-sq-speed').value);
+  const m = calcSqueezeMetrics(wCh, vFlow);
+
+  sqState.wCh = wCh;
+  sqState.vFlow = vFlow;
+  sqState.deliv = m.deliv;
+  sqState.viab = m.viab;
+  sqState.yieldPct = m.yieldPct;
+
+  document.getElementById('val-sq-width').textContent = `${wCh.toFixed(1)} μm (${m.strain.toFixed(0)}% 압축)`;
+  document.getElementById('val-sq-speed').textContent = `${vFlow} mm/s`;
+
+  document.getElementById('kpi-sq-strain').textContent = m.strain.toFixed(1) + " %";
+  document.getElementById('kpi-sq-dim').textContent = `세포 12μm → 채널 폭 ${wCh.toFixed(1)}μm 통과`;
+  document.getElementById('kpi-sq-deliv').textContent = m.deliv.toFixed(1) + " %";
+  document.getElementById('kpi-sq-viab').textContent = m.viab.toFixed(1) + " %";
+  document.getElementById('kpi-sq-viab').style.color = m.viab >= 75 ? "#34d399" : "#ef4444";
+  document.getElementById('kpi-sq-yield').textContent = m.yieldPct.toFixed(1) + " %";
+
+  const stEl = document.getElementById('kpi-sq-status');
+  const badge = document.getElementById('sq-badge');
+  if (m.yieldPct >= 60) {
+    stEl.textContent = "✅ 최적 공정 (나노기공 형성 & 생존율 우수)";
+    badge.textContent = "✅ 최적 나노기공 유입 중";
+    badge.className = "pill pill-ok";
+  } else if (m.viab < 60) {
+    stEl.textContent = "❌ 과도한 전단응력으로 세포막 파열(사멸)!";
+    badge.textContent = "❌ 세포막 파열 (Lysis 위험)";
+    badge.className = "pill pill-high";
+  } else {
+    stEl.textContent = "⚠️ 채널이 너무 넓어 나노기공 미형성";
+    badge.textContent = "⚠️ 기공 미형성 (전달 저조)";
+    badge.className = "pill pill-low";
+  }
+
+  drawSqueezeChart(wCh, vFlow);
+}
+
+function drawSqueezeChart(currW, vFlow) {
+  const canvas = document.getElementById('canvas-squeeze-chart');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = 200 * dpr;
+  ctx.scale(dpr, dpr);
+
+  const W = rect.width, H = 200;
+  ctx.clearRect(0, 0, W, H);
+  const padL = 42, padR = 18, padT = 18, padB = 30;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+
+  const xPos = w => padL + ((w - 3.5) / 6.5) * plotW;
+  const yPos = p => padT + plotH - (p / 100) * plotH;
+
+  // Grid
+  ctx.strokeStyle = "rgba(148,163,184,0.15)";
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = "10px sans-serif";
+  for (let p = 0; p <= 100; p += 25) {
+    const y = yPos(p);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+    ctx.fillText(p + "%", 6, y + 3);
+  }
+  for (let w = 4; w <= 10; w += 1) {
+    ctx.fillText(w + "μm", xPos(w) - 10, H - 8);
+  }
+
+  const series = [
+    { key: 'deliv', col: '#38bdf8', lw: 2 },
+    { key: 'viab', col: '#10b981', lw: 2 },
+    { key: 'yieldPct', col: '#c084fc', lw: 3 }
+  ];
+
+  series.forEach(s => {
+    ctx.strokeStyle = s.col;
+    ctx.lineWidth = s.lw;
+    ctx.beginPath();
+    for (let w = 3.5; w <= 10.01; w += 0.25) {
+      const m = calcSqueezeMetrics(w, vFlow);
+      const x = xPos(w), y = yPos(m[s.key]);
+      if (w === 3.5) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  });
+
+  const cx = xPos(currW);
+  ctx.strokeStyle = "#fff";
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(cx, padT); ctx.lineTo(cx, padT + plotH); ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+// ================= TAB 6: 2D Bifurcation PID Steering =================
+let pidState = { kp: 2.5, kd: 0.8, dist: 1.5, rmse: 6.8, robotT: 0 };
+
+function setPidPreset(kp, kd, dist) {
+  document.getElementById('slider-pid-kp').value = kp;
+  document.getElementById('slider-pid-kd').value = kd;
+  document.getElementById('slider-pid-dist').value = dist;
+  updatePidSim();
+}
+
+function updatePidSim() {
+  const kp = parseFloat(document.getElementById('slider-pid-kp').value);
+  const kd = parseFloat(document.getElementById('slider-pid-kd').value);
+  const dist = parseFloat(document.getElementById('slider-pid-dist').value);
+
+  pidState.kp = kp;
+  pidState.kd = kd;
+  pidState.dist = dist;
+
+  document.getElementById('val-pid-kp').textContent = kp.toFixed(1);
+  document.getElementById('val-pid-kd').textContent = kd.toFixed(1);
+  document.getElementById('val-pid-dist').textContent = dist.toFixed(1) + " mm/s";
+
+  // Simulate trajectory error over 100 steps (Stokes-bounded 2D bifurcation model)
+  let y = 0, vy = 0, sumSq = 0;
+  const errCurve = [];
+  for (let t = 0; t < 100; t++) {
+    const targetY = t > 35 ? 45 : 0; // Lower branch is at +45 um
+    const err = targetY - y;
+    const dErr = -vy;
+    const pulse = -dist * 3.0 * (0.6 + 0.4 * Math.sin(t * 0.35));
+    const u = kp * err + kd * dErr * 7.5;
+    const ay = (u + pulse) * 0.06;
+    vy = vy * 0.94 + ay;
+    y = Math.max(-62.0, Math.min(62.0, y + vy));
+    const currentErr = targetY - y;
+    sumSq += currentErr * currentErr;
+    errCurve.push(currentErr);
+  }
+  const rmse = Math.sqrt(sumSq / 100);
+  pidState.rmse = rmse;
+  pidState.errCurve = errCurve;
+
+  const suppress = Math.max(0, Math.min(98.5, (1 - rmse / 87.9) * 100));
+
+  document.getElementById('kpi-pid-mode').textContent = kp === 0 ? "❌ 무제어 (Open-loop)" : (kd === 0 ? "P 단독 제어" : "PID 자동 조향");
+  document.getElementById('kpi-pid-mode').style.color = kp >= 1.5 ? "#34d399" : "#f87171";
+  document.getElementById('kpi-pid-gains').textContent = `Kp = ${kp.toFixed(1)} | Kd = ${kd.toFixed(1)}`;
+  document.getElementById('kpi-pid-rmse').textContent = rmse.toFixed(1) + " μm";
+  document.getElementById('kpi-pid-suppress').textContent = suppress.toFixed(1) + " %";
+
+  const resEl = document.getElementById('kpi-pid-result');
+  const badge = document.getElementById('pid-badge');
+  if (kp >= 1.5 && rmse < 28) {
+    resEl.textContent = "🎯 종양 혈관 진입 성공!";
+    resEl.style.color = "#34d399";
+    badge.textContent = "✅ 아래쪽 표적 종양 분기점 진입 성공";
+    badge.className = "pill pill-ok";
+  } else {
+    resEl.textContent = "❌ 정상 혈관 오진입 (실패)";
+    resEl.style.color = "#ef4444";
+    badge.textContent = "❌ 맥동류에 휩쓸려 위쪽 정상 혈관 오진입!";
+    badge.className = "pill pill-high";
+  }
+
+  drawPidErrorChart(errCurve);
+}
+
+function drawPidErrorChart(errCurve) {
+  const canvas = document.getElementById('canvas-pid-chart');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = 170 * dpr;
+  ctx.scale(dpr, dpr);
+
+  const W = rect.width, H = 170;
+  ctx.clearRect(0, 0, W, H);
+  const padL = 42, padR = 16, padT = 16, padB = 26;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+
+  const yZero = padT + plotH / 2;
+  ctx.strokeStyle = "#64748b";
+  ctx.beginPath(); ctx.moveTo(padL, yZero); ctx.lineTo(W - padR, yZero); ctx.stroke();
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = "10px sans-serif";
+  ctx.fillText("오차 0", 6, yZero + 3);
+
+  ctx.strokeStyle = pidState.kp >= 1.5 ? "#10b981" : "#ef4444";
+  ctx.lineWidth = 2.2;
+  ctx.beginPath();
+  errCurve.forEach((e, i) => {
+    const x = padL + (i / 99) * plotW;
+    const y = yZero - (Math.max(-80, Math.min(80, e)) / 85) * (plotH / 2);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+}
+
+let animTick = 0;
+function animateAll() {
+  animTick += 0.04;
+
+  // Animate Tab 3 (AlphaFold & RBC sickling)
+  const afCanvas = document.getElementById('canvas-alphafold');
+  if (afCanvas && document.getElementById('tab-2').classList.contains('active')) {
+    const ctx = afCanvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = afCanvas.getBoundingClientRect();
+    if (rect.width > 0) {
+      afCanvas.width = rect.width * dpr;
+      afCanvas.height = 230 * dpr;
+      ctx.scale(dpr, dpr);
+      const W = rect.width, H = 230;
+      ctx.clearRect(0, 0, W, H);
+
+      ctx.fillStyle = "#cbd5e1";
+      ctx.font = "bold 12px sans-serif";
+      ctx.fillText("헤모글로빈 사슬(Hb) 분자 거동", 20, 24);
+      ctx.fillText("적혈구(RBC) 세포 형태 시뮬레이션", W * 0.56, 24);
+
+      if (afMode === 'GAG' || afMode === 'GAA') {
+        for (let i = 0; i < 6; i++) {
+          const x = 55 + (i % 3) * 65 + Math.sin(animTick + i) * 8;
+          const y = 75 + Math.floor(i / 3) * 70 + Math.cos(animTick + i) * 8;
+          ctx.fillStyle = "#3b82f6";
+          ctx.beginPath(); ctx.arc(x, y, 16, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#fff"; ctx.font = "bold 10px sans-serif";
+          ctx.fillText("HbA", x - 10, y + 4);
+        }
+        const rx = W * 0.75, ry = 125;
+        ctx.fillStyle = "#ef4444";
+        ctx.beginPath(); ctx.arc(rx, ry, 54, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#991b1b";
+        ctx.beginPath(); ctx.arc(rx, ry, 24, 0, Math.PI * 2); ctx.fill();
+      } else if (afMode === 'GTG') {
+        for (let i = 0; i < 6; i++) {
+          const x = 40 + i * 34;
+          const y = 120 + Math.sin(animTick * 2 + i * 0.5) * 3;
+          ctx.fillStyle = "#f59e0b";
+          ctx.beginPath(); ctx.arc(x, y, 15, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = "#ef4444"; ctx.lineWidth = 3;
+          ctx.strokeRect(x + 9, y - 4, 8, 8);
+          ctx.fillStyle = "#0f172a"; ctx.font = "bold 9px sans-serif";
+          ctx.fillText("HbS", x - 9, y + 3);
+        }
+        ctx.fillStyle = "#fca5a5";
+        ctx.font = "11px sans-serif";
+        ctx.fillText("▲ 발린(Val) 소수성 패치끼리 사슬처럼 엉겨 붙음!", 25, 175);
+
+        const rx = W * 0.75, ry = 125;
+        ctx.save();
+        ctx.translate(rx, ry);
+        ctx.rotate(Math.sin(animTick) * 0.08);
+        ctx.fillStyle = "#dc2626";
+        ctx.beginPath();
+        ctx.arc(0, 0, 58, 0.25 * Math.PI, 1.75 * Math.PI, false);
+        ctx.arc(22, 0, 46, 1.65 * Math.PI, 0.35 * Math.PI, true);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      } else {
+        for (let i = 0; i < 5; i++) {
+          const x = 50 + i * 40;
+          const y = 120 + Math.cos(animTick + i) * 12;
+          ctx.fillStyle = "#a855f7";
+          ctx.beginPath(); ctx.arc(x, y, 14, 0, Math.PI * 2); ctx.fill();
+        }
+        const rx = W * 0.75, ry = 125;
+        ctx.fillStyle = "#f97316";
+        ctx.beginPath(); ctx.ellipse(rx, ry, 55, 36, 0, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+  }
+
+  // Animate Tab 4 (Microrobot in Blood Vessel)
+  const canvas = document.getElementById('canvas-vessel-anim');
+  if (canvas && document.getElementById('tab-3').classList.contains('active')) {
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width > 0) {
+      canvas.width = rect.width * dpr;
+      canvas.height = 175 * dpr;
+      ctx.scale(dpr, dpr);
+      const W = rect.width, H = 175;
+
+      ctx.fillStyle = "#1a0f1a";
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "#4c1d24";
+      ctx.fillRect(0, 0, W, 14);
+      ctx.fillRect(0, H - 14, W, 14);
+
+      const grad = ctx.createLinearGradient(W - 100, 0, W, 0);
+      grad.addColorStop(0, "rgba(16,185,129,0)");
+      grad.addColorStop(1, "rgba(16,185,129,0.38)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(W - 100, 14, 100, H - 28);
+      ctx.fillStyle = "#34d399";
+      ctx.font = "bold 11px sans-serif";
+      ctx.fillText(`🎯 표적 종양 (pH ${simState.ph.toFixed(1)})`, W - 115, 32);
+
+      ctx.fillStyle = "rgba(239, 68, 68, 0.55)";
+      simState.rbcs.forEach(rbc => {
+        rbc.x -= (simState.vBlood * 0.25 + 0.4);
+        if (rbc.x < -10) rbc.x = W + 10;
+        ctx.beginPath();
+        ctx.ellipse(rbc.x, rbc.y, rbc.r * 1.3, rbc.r * 0.85, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      simState.robotX += simState.vNet * 0.18;
+      if (simState.robotX > W - 40) simState.robotX = 60;
+      if (simState.robotX < 25) simState.robotX = W - 120;
+
+      ctx.save();
+      ctx.shadowColor = "#38bdf8";
+      ctx.shadowBlur = 16;
+      ctx.fillStyle = "#38bdf8";
+      ctx.beginPath();
+      ctx.arc(simState.robotX, H / 2, 13, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      if (simState.ph <= 6.6) {
+        for (let p = 0; p < 6; p++) {
+          const angle = animTick * 2 + p * (Math.PI / 3);
+          const dist = 16 + (animTick * 12) % 18;
+          ctx.fillStyle = "#34d399";
+          ctx.beginPath();
+          ctx.arc(simState.robotX + Math.cos(angle) * dist, H / 2 + Math.sin(angle) * dist, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      ctx.fillStyle = "#0f172a";
+      ctx.font = "bold 9px sans-serif";
+      ctx.fillText("Cas9", simState.robotX - 11, H / 2 + 3);
+    }
+  }
+
+  // Animate Tab 5 (Microfluidic Cell Squeezing)
+  const sqCanvas = document.getElementById('canvas-squeeze-anim');
+  if (sqCanvas && document.getElementById('tab-4').classList.contains('active')) {
+    const ctx = sqCanvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = sqCanvas.getBoundingClientRect();
+    if (rect.width > 0) {
+      sqCanvas.width = rect.width * dpr;
+      sqCanvas.height = 190 * dpr;
+      ctx.scale(dpr, dpr);
+      const W = rect.width, H = 190;
+      ctx.clearRect(0, 0, W, H);
+
+      const gap = (sqState.wCh / 12.0) * 44; // channel half-opening pixels
+      const cy = H / 2;
+      const nStart = W * 0.35, nEnd = W * 0.65;
+
+      // Draw microfluidic PDMS walls
+      ctx.fillStyle = "#1e293b";
+      ctx.beginPath();
+      ctx.moveTo(0, 0); ctx.lineTo(W, 0); ctx.lineTo(W, cy - 55);
+      ctx.lineTo(nEnd + 25, cy - 55); ctx.lineTo(nEnd, cy - gap);
+      ctx.lineTo(nStart, cy - gap); ctx.lineTo(nStart - 25, cy - 55);
+      ctx.lineTo(0, cy - 55); ctx.closePath(); ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(0, H); ctx.lineTo(W, H); ctx.lineTo(W, cy + 55);
+      ctx.lineTo(nEnd + 25, cy + 55); ctx.lineTo(nEnd, cy + gap);
+      ctx.lineTo(nStart, cy + gap); ctx.lineTo(nStart - 25, cy + 55);
+      ctx.lineTo(0, cy + 55); ctx.closePath(); ctx.fill();
+
+      // Animate cells moving through constriction
+      const spd = (sqState.vFlow / 200) * 2.2;
+      sqState.cells = sqState.cells.map(x => (x + spd > W + 30 ? -20 : x + spd));
+
+      sqState.cells.forEach(cxPos => {
+        const inNarrow = cxPos >= nStart - 10 && cxPos <= nEnd + 10;
+        const afterNarrow = cxPos > nEnd + 10;
+        const rx = inNarrow ? 22 * (12 / sqState.wCh) * 0.7 : 20;
+        const ry = inNarrow ? Math.min(20, gap - 2) : 20;
+
+        ctx.save();
+        ctx.strokeStyle = (afterNarrow && sqState.viab < 55) ? "#ef4444" : "#60a5fa";
+        ctx.lineWidth = 2.5;
+        if (inNarrow) ctx.setLineDash([3, 3]); // nanopores open!
+        ctx.fillStyle = afterNarrow && sqState.deliv > 50 ? "rgba(16,185,129,0.28)" : "rgba(59,130,246,0.2)";
+        ctx.beginPath();
+        ctx.ellipse(cxPos, cy, rx, ry, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+
+        if (inNarrow || (afterNarrow && sqState.deliv > 50)) {
+          ctx.fillStyle = "#34d399";
+          ctx.font = "bold 9px sans-serif";
+          ctx.fillText("Cas9", cxPos - 11, cy + 3);
+        }
+      });
+    }
+  }
+
+  // Animate Tab 6 (2D Y-Bifurcation PID Steering)
+  const pidCanvas = document.getElementById('canvas-pid-anim');
+  if (pidCanvas && document.getElementById('tab-5').classList.contains('active')) {
+    const ctx = pidCanvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = pidCanvas.getBoundingClientRect();
+    if (rect.width > 0) {
+      pidCanvas.width = rect.width * dpr;
+      pidCanvas.height = 220 * dpr;
+      ctx.scale(dpr, dpr);
+      const W = rect.width, H = 220;
+      ctx.clearRect(0, 0, W, H);
+
+      const midY = H / 2;
+      const forkX = W * 0.45;
+
+      // Draw Y-shaped vessel background
+      ctx.lineCap = "round";
+      ctx.strokeStyle = "#2dd4bf22";
+      ctx.lineWidth = 46;
+      // Main trunk
+      ctx.beginPath(); ctx.moveTo(20, midY); ctx.lineTo(forkX, midY); ctx.stroke();
+      // Upper branch (Normal organ)
+      ctx.strokeStyle = "rgba(239,68,68,0.16)";
+      ctx.beginPath(); ctx.moveTo(forkX, midY); ctx.lineTo(W - 30, 48); ctx.stroke();
+      // Lower branch (Target tumor)
+      ctx.strokeStyle = "rgba(16,185,129,0.2)";
+      ctx.beginPath(); ctx.moveTo(forkX, midY); ctx.lineTo(W - 30, H - 48); ctx.stroke();
+
+      ctx.fillStyle = "#fca5a5";
+      ctx.font = "bold 11px sans-serif";
+      ctx.fillText("⚠️ 위쪽 분기: 정상 장기 혈관 (오진입 위험)", W - 230, 26);
+      ctx.fillStyle = "#34d399";
+      ctx.fillText("🎯 아래쪽 분기: 표적 종양 혈관 (목표 경로)", W - 230, H - 14);
+
+      // Ideal target trajectory (dashed green)
+      ctx.strokeStyle = "#10b981";
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(20, midY);
+      ctx.lineTo(forkX, midY);
+      ctx.lineTo(W - 30, H - 48);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Actual robot trajectory based on Kp, Kd
+      const success = pidState.kp >= 1.5;
+      ctx.strokeStyle = success ? "#38bdf8" : "#ef4444";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      for (let i = 0; i <= 100; i++) {
+        const px = 20 + (i / 100) * (W - 50);
+        let py;
+        if (px < forkX) {
+          const osc = Math.sin(i * 0.3 + animTick) * (pidState.kd < 0.3 ? 10 : 3);
+          py = midY - (pidState.kp === 0 ? (i * 0.35) : 0) + osc;
+        } else {
+          const frac = (px - forkX) / (W - 30 - forkX);
+          const endY = success ? (H - 48) : 48;
+          const osc = Math.sin(i * 0.4 + animTick) * (pidState.kp > 3.5 && pidState.kd < 0.4 ? 14 : 2.5);
+          py = midY + frac * (endY - midY) + osc;
+        }
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+
+      // Moving microrobot along trajectory
+      const tProg = (animTick * 18) % 100;
+      const rx = 20 + (tProg / 100) * (W - 50);
+      let ry;
+      if (rx < forkX) {
+        ry = midY - (pidState.kp === 0 ? (tProg * 0.35) : 0);
+      } else {
+        const frac = (rx - forkX) / (W - 30 - forkX);
+        const endY = success ? (H - 48) : 48;
+        ry = midY + frac * (endY - midY);
+      }
+      ctx.fillStyle = "#38bdf8";
+      ctx.beginPath(); ctx.arc(rx, ry, 10, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
+  requestAnimationFrame(animateAll);
+}
+
+window.addEventListener('resize', () => {
+  runExp1(); drawHdChart(); updateAlphaFoldSim(); updateRobotSim(); updateSqueezeSim(); updatePidSim();
+});
+runExp1();
+renderMutComparison();
+updateAlphaFoldSim();
+updateRobotSim();
+updateSqueezeSim();
+updatePidSim();
+requestAnimationFrame(animateAll);
+</script>
+</body>
+</html>
